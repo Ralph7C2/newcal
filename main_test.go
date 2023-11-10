@@ -3,90 +3,39 @@ package main
 import (
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
-// func TestNow(t *testing.T) {
-//	expectedYear := 2023
-//	expectedMonth := "Early Fall"
-//	expectedDay := 29
-//	got := Now()
-
-//	assert.Equal(t, expectedYear, got.Year)
-//	assert.Equal(t, expectedMonth, got.Month)
-//	assert.Equal(t, expectedDay, got.Day)
-
-//	weekDay := DayOfWeek(got.Day)
-
-//	assert.Equal(t, "Venus", weekDay)
-// }
-
-func TestGregorianToNewCalendar(t *testing.T) {
-	tests := []struct {
-		gregorianDate string
-		expectedYear  int
-		expectedMonth string
-		expectedDay   int
-	}{
-		{"2022-12-21", 2023, "Early Winter", 1},
-		{"2023-01-01", 2023, "Early Winter", 12},
-		{"2023-01-02", 2023, "Early Winter", 13},
-		{"2023-01-12", 2023, "Early Winter", 23},
-		{"2023-01-22", 2023, "Early Winter", 33},
-		{"2023-01-25", 2023, "Early Winter", 36},
-		{"2023-01-26", 2023, "Mid Winter", 37},
-		{"2023-01-31", 2023, "Late Winter", 42},
-		{"2023-02-01", 2023, "Late Winter", 43},
-		{"2023-02-28", 2023, "Late Winter", 70},
-		{"2023-03-03", 2023, "Late Winter", 73},
-		{"2023-03-04", 2023, "Early Spring", 1},
-		{"2023-03-31", 2023, "Early Spring", 28},
-		{"2023-04-01", 2023, "Early Spring", 29},
-		{"2023-04-09", 2023, "Mid Spring", 37},
-		{"2023-04-10", 2023, "Late Spring", 38},
-		{"2023-04-30", 2023, "Late Spring", 58},
-		{"2023-05-01", 2023, "Late Spring", 59},
-		{"2023-05-15", 2023, "Late Spring", 73},
-		{"2023-05-16", 2023, "Early Summer", 1},
-		{"2023-05-31", 2023, "Early Summer", 16},
-		{"2023-06-01", 2023, "Early Summer", 17},
-		{"2023-06-21", 2023, "Mid Summer", 37},
-		{"2023-06-22", 2023, "Late Summer", 38},
-		{"2023-06-30", 2023, "Late Summer", 46},
-		{"2023-07-01", 2023, "Late Summer", 47},
-		{"2023-07-27", 2023, "Late Summer", 73},
-		{"2023-07-28", 2023, "Early Autumn", 1},
-		{"2023-07-31", 2023, "Early Autumn", 4},
-		{"2023-08-01", 2023, "Early Autumn", 5},
-		{"2023-08-31", 2023, "Early Autumn", 35},
-		{"2023-09-01", 2023, "Early Autumn", 36},
-		{"2023-09-02", 2023, "Mid Autumn", 37},
-		{"2023-09-30", 2023, "Late Autumn", 65},
-		{"2023-10-01", 2023, "Late Autumn", 66},
-		{"2023-10-08", 2023, "Late Autumn", 73},
-		{"2023-10-09", 2023, "Early Fall", 1},
-		{"2023-10-31", 2023, "Early Fall", 23},
-		{"2023-11-01", 2023, "Early Fall", 24},
-		{"2023-11-14", 2023, "Mid Fall", 37},
-		{"2023-11-15", 2023, "Late Fall", 38},
-		{"2023-11-30", 2023, "Late Fall", 53},
-		{"2023-12-01", 2023, "Late Fall", 54},
-		{"2023-12-20", 2023, "Late Fall", 73},
-		{"2023-12-21", 2024, "Early Winter", 1},
-		{"2024-01-01", 2024, "Early Winter", 12},
-		{"2024-02-28", 2024, "Late Winter", 70},
-		{"2024-02-29", 2024, "Leap Day", 0},
-		{"2024-03-01", 2024, "Late Winter", 71},
-		{"2024-03-03", 2024, "Late Winter", 73},
-	}
-
-	for _, test := range tests {
-		gregorianDate, _ := time.Parse("2006-01-02", test.gregorianDate)
-		year, month, day := FromGregorian(gregorianDate)
-
-		if year != test.expectedYear || month != test.expectedMonth || day != test.expectedDay {
-			t.Errorf("For Gregorian Date %s, expected: (%d, %s, %d), got: (%d, %s, %d)", test.gregorianDate, test.expectedYear, test.expectedMonth, test.expectedDay, year, month, day)
-		}
-	}
+func TestFromUnix(t *testing.T) {
+	assert.Equal(t, Time{Year: 1968, Month: "Autumn", Day: 73}, fromUnix(time.Date(1968, 10, 8, 0, 0, 0, 0, time.UTC).Unix()))
+	assert.Equal(t, Time{Year: 1968, Month: "Fall", Day: 1}, fromUnix(time.Date(1968, 10, 9, 0, 0, 0, 0, time.UTC).Unix()))
+	assert.Equal(t, Time{Year: 1968, Month: "Fall", Day: 73}, fromUnix(time.Date(1968, 12, 20, 0, 0, 0, 0, time.UTC).Unix()))
+	assert.Equal(t, Time{Year: 1969, Month: "Winter", Day: 1}, fromUnix(time.Date(1968, 12, 21, 0, 0, 0, 0, time.UTC).Unix()))
+	assert.Equal(t, Time{Year: 1969, Month: "Fall", Day: 73}, fromUnix(time.Date(1969, 12, 20, 0, 0, 0, 0, time.UTC).Unix()))
+	assert.Equal(t, Time{Year: 1970, Month: "Winter", Day: 1}, fromUnix(time.Date(1969, 12, 21, 0, 0, 0, 0, time.UTC).Unix()))
+	assert.Equal(t, Time{Year: 1970, Month: "Winter", Day: 11}, fromUnix(-86400))
+	assert.Equal(t, Time{Year: 1970, Month: "Winter", Day: 11}, fromUnix(time.Date(1969, 12, 31, 0, 0, 0, 0, time.UTC).Unix()))
+	assert.Equal(t, Time{Year: 1970, Month: "Winter", Day: 12}, fromUnix(0))
+	assert.Equal(t, Time{Year: 1970, Month: "Winter", Day: 12}, fromUnix(time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC).Unix()))
+	assert.Equal(t, Time{Year: 1970, Month: "Winter", Day: 13}, fromUnix(86400))
+	assert.Equal(t, Time{Year: 1970, Month: "Winter", Day: 13}, fromUnix(time.Date(1970, 1, 2, 0, 0, 0, 0, time.UTC).Unix()))
+	assert.Equal(t, Time{Year: 1970, Month: "Winter", Day: 71}, fromUnix(5097600))
+	assert.Equal(t, Time{Year: 1970, Month: "Winter", Day: 71}, fromUnix(time.Date(1970, 3, 1, 0, 0, 0, 0, time.UTC).Unix()))
+	assert.Equal(t, Time{Year: 1970, Month: "Winter", Day: 73}, fromUnix(time.Date(1970, 3, 3, 0, 0, 0, 0, time.UTC).Unix()))
+	assert.Equal(t, Time{Year: 1970, Month: "Spring", Day: 1}, fromUnix(time.Date(1970, 3, 4, 0, 0, 0, 0, time.UTC).Unix()))
+	assert.Equal(t, Time{Year: 1971, Month: "Winter", Day: 71}, fromUnix(36633600))
+	assert.Equal(t, Time{Year: 1971, Month: "Winter", Day: 71}, fromUnix(time.Date(1971, 3, 1, 0, 0, 0, 0, time.UTC).Unix()))
+	assert.Equal(t, Time{Year: 1972, Month: "Leap Day", Day: 0}, fromUnix(36633600+365*86400))
+	assert.Equal(t, Time{Year: 1972, Month: "Leap Day", Day: 0}, fromUnix(time.Date(1972, 2, 29, 0, 0, 0, 0, time.UTC).Unix()))
+	assert.Equal(t, Time{Year: 1972, Month: "Winter", Day: 71}, fromUnix(36633600+366*86400))
+	assert.Equal(t, Time{Year: 1987, Month: "Spring", Day: 73}, fromUnix(time.Date(1987, 5, 15, 0, 0, 0, 0, time.UTC).Unix()))
+	assert.Equal(t, Time{Year: 1999, Month: "Summer", Day: 1}, fromUnix(time.Date(1999, 5, 16, 0, 0, 0, 0, time.UTC).Unix()))
+	assert.Equal(t, Time{Year: 2999, Month: "Summer", Day: 73}, fromUnix(time.Date(2999, 7, 27, 0, 0, 0, 0, time.UTC).Unix()))
+	assert.Equal(t, Time{Year: 3147, Month: "Autumn", Day: 1}, fromUnix(time.Date(3147, 7, 28, 0, 0, 0, 0, time.UTC).Unix()))
+	assert.Equal(t, Time{Year: 3147, Month: "Autumn", Day: 73}, fromUnix(time.Date(3147, 10, 8, 0, 0, 0, 0, time.UTC).Unix()))
+	assert.Equal(t, Time{Year: 1, Month: "Autumn", Day: 73}, fromUnix(time.Date(1, 10, 8, 0, 0, 0, 0, time.UTC).Unix()))
+	assert.Equal(t, Time{Year: 0, Month: "Autumn", Day: 73}, fromUnix(time.Date(0, 10, 8, 0, 0, 0, 0, time.UTC).Unix()))
 }
 
 func TestDayOfWeek(t *testing.T) {
@@ -113,7 +62,7 @@ func TestDayOfWeek(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		got := DayOfWeek(test.newCalDay)
+		got := Time{Day: test.newCalDay}.DayOfWeek()
 		if got != test.expected {
 			t.Errorf("For New Calendar Day %d, expected: %s, got: %s", test.newCalDay, test.expected, got)
 		}

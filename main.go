@@ -21,15 +21,67 @@ func main() {
 	}
 }
 
+func fromUnix(unix int64) Time {
+	days := unix / 86400
+	days += 11
+	year := 1970
+
+	for days < 0 {
+		if isLeapYear(year - 1) {
+			days += 366
+			year--
+		} else {
+			days += 365
+			year--
+		}
+	}
+	for days > 365 {
+		if isLeapYear(year) {
+			if days >= 366 {
+				days -= 366
+				year++
+			}
+		} else {
+			days -= 365
+			year++
+		}
+	}
+	if isLeapYear(year) {
+		if days == 70 {
+			return Time{
+				Year:  year,
+				Month: "Leap Day",
+				Day:   0,
+			}
+		}
+		if days > 70 {
+			days--
+		}
+	}
+
+	season := days / 73
+	days %= 73
+
+	return Time{
+		Year:  year,
+		Month: seasons[season],
+		Day:   int(days + 1),
+	}
+}
+
+func isLeapYear(year int) bool {
+	return year%4 == 0 && (year%100 != 0 || year%400 == 0)
+}
+
 func run(cmd *cobra.Command, args []string) {
-	t := Now()
+	t := fromUnix(time.Now().Unix())
 	nominal := "Today"
 	if len(args) > 0 {
 		var err error
 		t, err = Parse(args[0])
 		if err != nil {
 			cmd.PrintErrln(err)
-			cmd.Usage()
+			_ = cmd.Usage()
 			return
 		}
 		nominal = args[0]
@@ -85,27 +137,12 @@ type Time struct {
 	Day   int
 }
 
-func Now() Time {
-	year, month, day := FromGregorian(time.Now())
-
-	return Time{
-		Year:  year,
-		Month: month,
-		Day:   day,
-	}
-}
-
 func Parse(date string) (Time, error) {
 	t, err := time.Parse("2006-01-02", date)
 	if err != nil {
 		return Time{}, err
 	}
-	year, month, day := FromGregorian(t)
-	return Time{
-		Year:  year,
-		Month: month,
-		Day:   day,
-	}, nil
+	return fromUnix(t.Unix()), nil
 }
 
 // Constants for seasons and month names
@@ -117,47 +154,7 @@ const (
 	Fall   = "Fall"
 )
 
-func FromGregorian(date time.Time) (int, string, int) {
-	seasons := []string{Winter, Spring, Summer, Autumn, Fall}
-	daysInMonth := 73
-
-	// Calculate the total number of days from December 21 of the previous Gregorian year
-	dec21 := time.Date(date.Year()-1, time.December, 21, 0, 0, 0, 0, date.Location())
-	totalDays := int(date.Sub(dec21).Hours() / 24)
-
-	newCalendarYear := date.Year()
-	if totalDays < 11 || totalDays == 365 {
-		newCalendarYear++
-	}
-
-	// Check if it's a leap day
-	if date.Month() == time.February && date.Day() == 29 {
-		return newCalendarYear, "Leap Day", 0
-	}
-	// Check if it's a leap year and after leap day
-	if date.Year()%4 == 0 && date.Year()%100 != 0 && totalDays >= 71 {
-		totalDays--
-	}
-
-	monthIndex := totalDays / daysInMonth
-	seasonName := seasons[monthIndex%5]
-
-	// Check if it's a mid-day
-	isMidDay := totalDays%daysInMonth == 36
-	if isMidDay {
-		// Find the corresponding "Mid" day
-		return newCalendarYear, fmt.Sprintf("Mid %s", seasonName), 37
-	}
-
-	// Determine if it's early or late in the month
-	isLateMonth := (totalDays % daysInMonth) >= 36
-	if isLateMonth {
-		seasonName = "Late " + seasonName
-	} else {
-		seasonName = "Early " + seasonName
-	}
-	return newCalendarYear, seasonName, (totalDays % daysInMonth) + 1
-}
+var seasons = []string{Winter, Spring, Summer, Autumn, Fall}
 
 // Constants for days of the week
 const (
