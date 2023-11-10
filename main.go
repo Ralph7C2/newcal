@@ -3,16 +3,23 @@ package main
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 )
 
-var c = cobra.Command{
-	Use:   "newcal [date]",
-	Short: "Print a calendar for the given date",
-	Run:   run,
+var c cobra.Command
+
+func init() {
+	c = cobra.Command{
+		Use:   "newcal",
+		Short: "Print a calendar for the given date",
+		Run:   run,
+	}
+	c.Flags().StringP("gregorian", "g", "", "Pass in greogian date to convert(YYYY-MM-DD)")
+	c.Flags().StringP("unix", "u", "", "Pass in unix timestamp to convert")
 }
 
 func main() {
@@ -74,18 +81,56 @@ func isLeapYear(year int) bool {
 }
 
 func run(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		_ = cmd.Usage()
+		return
+	}
+
+	g, err := cmd.Flags().GetString("gregorian")
+	if err != nil {
+		cmd.PrintErrln(err)
+		_ = cmd.Usage()
+		return
+	}
+	u, err := cmd.Flags().GetString("unix")
+	if err != nil {
+		cmd.PrintErrln(err)
+		_ = cmd.Usage()
+		return
+	}
+
+	if u != "" && g != "" {
+		cmd.PrintErrln("Cannot pass in both unix and gregorian")
+		_ = cmd.Usage()
+		return
+	}
+
 	t := fromUnix(time.Now().Unix())
 	nominal := "Today"
-	if len(args) > 0 {
+
+	if g != "" {
 		var err error
-		t, err = Parse(args[0])
+		t, err = Parse(g)
 		if err != nil {
 			cmd.PrintErrln(err)
 			_ = cmd.Usage()
 			return
 		}
-		nominal = args[0]
+		nominal = g
 	}
+
+	if u != "" {
+		uu, err := strconv.ParseInt(u, 10, 64)
+		if err != nil {
+			cmd.PrintErrln(err)
+			_ = cmd.Usage()
+			return
+		}
+
+		t = fromUnix(uu)
+		nominal = fmt.Sprintf("%d", uu)
+	}
+
 	if t.Day == 0 {
 		fmt.Printf("%s is LEAP DAY, %d\n", nominal, t.Year)
 		return
