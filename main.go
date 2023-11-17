@@ -131,22 +131,17 @@ func run(cmd *cobra.Command, args []string) {
 		nominal = fmt.Sprintf("%d", uu)
 	}
 
-	if t.Day == 0 {
-		fmt.Printf("%s is LEAP DAY, %d\n", nominal, t.Year)
+	fmt.Printf("%s is %s\n", nominal, t.String())
+	if t.Day == 0 || t.Day == 37 {
 		return
 	}
-	if t.Day == 37 {
-		fmt.Printf("%s is %s %d, %d\n", nominal, t.Month, t.Day, t.Year)
-		return
-	}
-	fmt.Printf("%s is %s, %s %d, %d\n", nominal, t.DayOfWeek(), t.Month, t.Day, t.Year)
 
 	printCalendar(t)
 }
 
 func printCalendar(t Time) {
 	fmt.Println("*" + strings.Repeat("-", 79) + "*")
-	fmt.Println(formatMonthStr(t.Month))
+	fmt.Println(formatMonthStr(t.MonthWithModifier()))
 	fmt.Printf("*-------==-------==-------==-------==-------==-------==-------==-------==-------*\n")
 	fmt.Printf("|  Mer  ||  Ven  ||  Ear  ||  Mar  ||  Jup  ||  Sat  ||  Nep  ||  Ura  ||  Plu  |\n")
 	fmt.Printf("*-------==-------==-------==-------==-------==-------==-------==-------==-------*\n")
@@ -180,6 +175,27 @@ type Time struct {
 	Year  int
 	Month string
 	Day   int
+}
+
+func (t Time) MonthWithModifier() string {
+	modifier := "Early"
+	if t.Day > 37 {
+		modifier = "Late"
+	} else if t.Day == 37 {
+		modifier = "Mid"
+	}
+	return fmt.Sprintf("%s %s", modifier, t.Month)
+}
+
+func (t Time) String() string {
+	if t.Day == 0 {
+		return fmt.Sprintf("Leap Day, %d", t.Year)
+	}
+	dayOfWeek := ""
+	if t.Day != 37 {
+		dayOfWeek = fmt.Sprintf("%s, ", t.DayOfWeek())
+	}
+	return fmt.Sprintf("%s%d %s, %d", dayOfWeek, t.Day, t.MonthWithModifier(), t.Year)
 }
 
 func Parse(date string) (Time, error) {
