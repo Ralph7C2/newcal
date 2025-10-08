@@ -1,6 +1,6 @@
 # newcal
 
-A Go library and CLI tool for working with "The New Calendar" - a reformed calendar system featuring 5 seasons, 9-day weeks, and a more logical structure than the Gregorian calendar.
+A Go library and CLI tool for working with ["The New Calendar"](https://thenewcalendar.com) - a reformed calendar system featuring 5 seasons and 9-day weeks.
 
 ## The New Calendar System
 
